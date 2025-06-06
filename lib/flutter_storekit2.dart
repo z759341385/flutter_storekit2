@@ -1,7 +1,7 @@
 /*
  * @Author: zhc
  * @Date: 2025-01-08 18:10:25
- * @LastEditTime: 2025-03-07 09:39:37
+ * @LastEditTime: 2025-06-06 22:10:37
  * @Description: 
  * @LastEditors: Please set LastEditors
  */
@@ -99,6 +99,24 @@ class FlutterStorekit2 {
     } catch (e) {
       print('Error getting all subscription transactions: $e');
       return [];
+    }
+  }
+
+  /// 获取非消耗型内购商品的购买历史
+  Future<StoreTransaction?> getNonConsumablePurchaseHistory(String productId) async {
+    try {
+      final Map<Object?, Object?>? result = await _channel.invokeMethod(
+        'getNonConsumablePurchaseHistory',
+        {'productId': productId},
+      );
+      
+      if (result != null) {
+        return StoreTransaction.fromMap(Map<String, dynamic>.from(result));
+      }
+      return null;
+    } catch (e) {
+      print('Error checking non-consumable purchase history: $e');
+      return null;
     }
   }
 

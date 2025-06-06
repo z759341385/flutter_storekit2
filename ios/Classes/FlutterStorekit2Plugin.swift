@@ -32,6 +32,8 @@ public class FlutterStorekit2Plugin: NSObject, FlutterPlugin {
       handleCheckConsumablePurchaseHistory(call, result)
     case "getAllSubscriptionTransactions":
       handleGetAllSubscriptionTransactions(call, result)
+    case "getNonConsumablePurchaseHistory":
+      handleGetNonConsumablePurchaseHistory(call, result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -179,6 +181,26 @@ public class FlutterStorekit2Plugin: NSObject, FlutterPlugin {
                               message: error.localizedDescription,
                               details: nil))
         }
+    }
+  }
+
+  @available(iOS 15.0, *)
+  private func handleGetNonConsumablePurchaseHistory(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let productId = args["productId"] as? String else {
+      result(FlutterError(code: "invalid_argument", message: "Missing productId", details: nil))
+      return
+    }
+    
+    Task {
+      do {
+        let transaction = try await StoreKitManager.shared.getNonConsumablePurchaseHistory(productId: productId)
+        result(transaction)
+      } catch StoreError.transactionNotFound {
+        result(FlutterError(code: "transaction_not_found", message: "未找到非消耗型商品交易记录", details: nil))
+      } catch {
+        result(FlutterError(code: "unknown_error", message: error.localizedDescription, details: nil))
+      }
     }
   }
 }

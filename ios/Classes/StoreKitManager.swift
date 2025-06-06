@@ -217,6 +217,36 @@ class StoreKitManager {
         
         return transactions
     }
+    
+    /// 获取非消耗型内购商品的购买历史
+    func getNonConsumablePurchaseHistory(productId: String) async throws -> [String: String] {
+        print("开始查询非消耗型内购商品[\(productId)]的购买历史")
+        
+        // 使用 Transaction.all 而不是 currentEntitlements，因为非消耗型商品可能不在当前权限中
+        for await transaction in Transaction.all {
+            if case .verified(let verifiedTransaction) = transaction {
+                print("已验证的交易: productID=[\(verifiedTransaction.productID)], id=[\(verifiedTransaction.id)]")
+                
+                if verifiedTransaction.productID == productId {
+                    let result = [
+                        "productId": verifiedTransaction.productID,
+                        "transactionId": verifiedTransaction.id.description,
+                        "originalTransactionId": verifiedTransaction.originalID.description,
+                        "purchaseDate": dateToLocalString(verifiedTransaction.purchaseDate),
+                        "expirationDate": "", // 非消耗型商品没有过期日期
+                        "transactionState": verifiedTransaction.revocationDate == nil ? "purchased" : "revoked",
+                        "isUpgraded": "false" // 非消耗型商品不支持升级
+                    ]
+                    
+                    print("找到匹配的非消耗型商品交易记录: \(result)")
+                    return result
+                }
+            }
+        }
+        
+        print("未找到非消耗型商品[\(productId)]的购买记录")
+        throw StoreError.transactionNotFound
+    }
 }
 
 /// 自定义错误
